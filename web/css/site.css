@@ -58,10 +58,8 @@ a.desc:after {
     margin: 0 0 15px 0;
 }
 
-/* align the logout "link" (button in form) of the navbar */
 .nav li > form > button.logout {
     padding-top: 7px;
-    color: rgba(255, 255, 255, 0.5);
 }
 
 @media(max-width:767px) {
@@ -76,7 +74,7 @@ a.desc:after {
 .nav > li > form > button.logout:focus,
 .nav > li > form > button.logout:hover {
     text-decoration: none;
-    color: rgba(255, 255, 255, 0.75);
+    color:var(--bs-nav-link-color);
 }
 
 .nav > li > form > button.logout:focus {
@@ -85,4 +83,21 @@ a.desc:after {
 
 .form-group {
     margin-bottom: 1rem;
+}
+
+/* Стили для выпадающего меню */
+.dropdown-menu {
+    background-color: white;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
+}
+
+.dropdown-item {
+    color: #212529;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background-color: #f8f9fa;
+    color: #7E57C2;
 }

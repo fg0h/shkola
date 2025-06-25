@@ -2,12 +2,9 @@
 
 namespace app\controllers;
 
-use app\models\Application;
-use app\models\Bilet;
-use app\models\Category;
-use app\models\Comments;
-use app\models\News;
-use app\models\SignupForm;
+use app\models\Raspisanie;
+use app\models\Signup;
+use app\models\Zapis;
 use Yii;
 use yii\filters\AccessControl;
 use yii\web\Controller;
@@ -15,7 +12,9 @@ use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\models\LoginForm;
 use app\models\ContactForm;
-use yii\web\UploadedFile;
+use app\models\Courses;
+use app\models\Teachers;
+
 
 class SiteController extends Controller
 {
@@ -27,12 +26,20 @@ class SiteController extends Controller
         return [
             'access' => [
                 'class' => AccessControl::class,
-                'only' => ['logout'],
+                'only' => ['logout', 'admin'], // добавили admin
                 'rules' => [
                     [
                         'actions' => ['logout'],
                         'allow' => true,
                         'roles' => ['@'],
+                    ],
+                    [
+                        'actions' => ['admin'],
+                        'allow' => true,
+                        'roles' => ['@'],
+                        'matchCallback' => function () {
+                            return Yii::$app->user->identity->role == 2;
+                        },
                     ],
                 ],
             ],
@@ -133,57 +140,90 @@ class SiteController extends Controller
         return $this->render('about');
     }
 
-    public function actionComend()
+    public function actionAdmin()
     {
-        $model = new Comments();
-        if ($model->load(Yii::$app->request->post()) && $model->save()) {
-            return $this->goBack();
+        if (Yii::$app->user->isGuest || Yii::$app->user->identity->role !== 2) {
+            throw new \yii\web\ForbiddenHttpException('Доступ запрещен');
         }
-        return $this->render('comend',
-            [
-                'model' => $model
-            ]);
-    }
-    public function actionCategory(){
-        $categorys = Category::find()->all();
-        return $this->render('category', ['categorys'=>$categorys]);
+
+        $this->layout = 'admin';
+        return $this->render('admin');
     }
 
-    public function actionNews($id)
+
+    public function actionPrepod()
     {
-        $category = Category::findOne($id);
-        $news = News::find()->where(['category_id' => $id])->all();
-
-        return $this->render('news', [
-            'category' => $category,
-            'news' => $news,
-        ]);
+        return $this->render('prepod');
     }
+
     public function actionSignup()
     {
-        $us = new SignupForm();
-        if ($us->load(Yii::$app->request->post()) && $us->signup()) {
+        $model = new Signup();
+        if ($model->load(Yii::$app->request->post()) && $model->signup()) {
             return $this->goHome();
         }
+
         return $this->render('signup', [
-            'us' => $us
+            'model' => $model,
         ]);
     }
-    public function actionBilet()
+
+    public function actionCourses()
     {
-        $model = new Bilet();
+        $courses = Courses::find()->all();
+
+        return $this->render('courses', [
+            'courses' => $courses,
+        ]);
+    }
+
+    public function actionTeachers()
+    {
+        $teachers = Teachers::find()->all();
+
+        return $this->render('teachers', [
+            'teachers' => $teachers
+        ]);
+    }
+
+    public function actionRaspisanie()
+    {
+        $userId = Yii::$app->user->id;
+
+        $raspisanie = \app\models\Raspisanie::find()
+            ->where(['user_id' => $userId])
+            ->orderBy(['den_nedeli' => SORT_ASC, 'time' => SORT_ASC])
+            ->all();
+
+        return $this->render('raspisanie', [
+            'raspisanie' => $raspisanie,
+        ]);
+    }
+
+    public function actionZapis()
+    {
+        $model = new Zapis();
+        $courses = Courses::find()->select(['name', 'id'])->indexBy('id')->column();
 
         if ($model->load(Yii::$app->request->post())) {
-            $model->user_id = Yii::$app->user->id; // Добавляем user_id
+            $model->user_id = Yii::$app->user->id;
             if ($model->save()) {
-                Yii::$app->session->setFlash('success', 'Данные успешно сохранены');
+                Yii::$app->session->setFlash('success', 'Вы успешно записались на курс!');
                 return $this->refresh();
             }
         }
 
-        return $this->render('bilet', [
-            'model' => $model
+        return $this->render('zapis', [
+            'model' => $model,
+            'courses' => $courses,
         ]);
+    }
+
+    public function actionCities($country)
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+        $cities = Zapis::getCities();
+        return isset($cities[$country]) ? $cities[$country] : [];
     }
 
 }

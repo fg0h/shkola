@@ -2,7 +2,7 @@
 
 namespace app\models;
 
-use yii\behaviors\TimestampBehavior;
+use Yii;
 use yii\db\ActiveRecord;
 
 class User extends ActiveRecord implements \yii\web\IdentityInterface
@@ -33,7 +33,14 @@ class User extends ActiveRecord implements \yii\web\IdentityInterface
 
         return null;
     }
-
+    public function attributeLabels()
+    {
+        return [
+            'id' => 'ID',
+            'username' => 'Логин',
+            'password' => 'Пароль'
+        ];
+    }
     /**
      * Finds user by username
      *
@@ -42,7 +49,7 @@ class User extends ActiveRecord implements \yii\web\IdentityInterface
      */
     public static function findByUsername($username)
     {
-        return static::findOne(['username' => $username]);
+        return static::findOne(['username'=>$username]);
     }
 
     /**
@@ -58,7 +65,7 @@ class User extends ActiveRecord implements \yii\web\IdentityInterface
      */
     public function getAuthKey()
     {
-        // return $this->authKey;
+//        return $this->authKey;
     }
 
     /**
@@ -66,7 +73,7 @@ class User extends ActiveRecord implements \yii\web\IdentityInterface
      */
     public function validateAuthKey($authKey)
     {
-        //return $this->authKey === $authKey;
+//        return $this->authKey === $authKey;
     }
 
     /**
@@ -77,21 +84,9 @@ class User extends ActiveRecord implements \yii\web\IdentityInterface
      */
     public function validatePassword($password)
     {
-        return \Yii::$app->security->validatePassword($password, $this->password);
+        return Yii::$app->getSecurity()->validatePassword($password, $this->password);
     }
-
-
-
-    public function behaviors()
-    {
-        return [
-            [
-                'class' => TimestampBehavior::class,
-                'attributes' => [
-                    ActiveRecord::EVENT_BEFORE_INSERT => ['created_at', 'updated_at'],
-                    ActiveRecord::EVENT_BEFORE_UPDATE => ['updated_at'],
-                ],
-            ],
-        ];
+    public function isAdmin(){
+        return $this->role===1;
     }
 }
